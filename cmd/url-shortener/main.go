@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/marchuknikolay/url-shortener/internal/config"
+	"github.com/marchuknikolay/url-shortener/internal/config/lib/logger/sl"
+	"github.com/marchuknikolay/url-shortener/internal/config/storage/sqlite"
 )
 
 const (
@@ -21,7 +23,25 @@ func main() {
 	log.Info("Starting url-shortener", slog.String("env", cfg.Env))
 	log.Debug("Debug messages are enabled")
 
-	// init repository
+	storage, err := sqlite.New(cfg.Storage)
+	if err != nil {
+		log.Error("Error opening a storage, ", sl.Err(err))
+		os.Exit(1)
+	}
+
+	id, err := storage.SaveUrl("http://google.com", "google")
+	if err != nil {
+		log.Error("Error saving a url, ", sl.Err(err))
+		os.Exit(1)
+	}
+
+	log.Info("saved url", slog.Int64("id", id))
+
+	_, err = storage.SaveUrl("http://google.com", "google")
+	if err != nil {
+		log.Error("Error saving a url, ", sl.Err(err))
+		os.Exit(1)
+	}
 
 	// init router
 
