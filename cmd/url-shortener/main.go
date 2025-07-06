@@ -29,19 +29,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	id, err := storage.SaveUrl("http://google.com", "google")
+	err = storage.DeleteUrl("google")
 	if err != nil {
-		log.Error("Error saving a url, ", sl.Err(err))
+		log.Error("Error deleting a url, ", sl.Err(err))
 		os.Exit(1)
 	}
+	log.Info("Deleted a url")
 
-	log.Info("saved url", slog.Int64("id", id))
-
-	_, err = storage.SaveUrl("http://google.com", "google")
+	url, err := storage.GetUrl("google")
 	if err != nil {
-		log.Error("Error saving a url, ", sl.Err(err))
+		log.Error("Error getting a url, ", sl.Err(err))
 		os.Exit(1)
 	}
+	log.Info("", slog.String("url", url))
 
 	// init router
 

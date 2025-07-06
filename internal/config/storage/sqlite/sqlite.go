@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/marchuknikolay/url-shortener/internal/config/storage"
@@ -53,4 +54,37 @@ func (s *Storage) SaveUrl(urlToSave, alias string) (int64, error) {
 	}
 
 	return res.LastInsertId()
+}
+
+func (s *Storage) GetUrl(alias string) (string, error) {
+	stmt, err := s.db.Prepare("SELECT url FROM url WHERE alias=?")
+	if err != nil {
+		return "", fmt.Errorf("could not prepare a query for getting url for the alias %v, err - %w", alias, err)
+	}
+
+	var url string
+	err = stmt.QueryRow(alias).Scan(&url)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", fmt.Errorf("%w", storage.ErrUrlNotFound)
+		}
+
+		return "", fmt.Errorf("could not find a url for the alias %v, err - %w", alias, err)
+	}
+
+	return url, nil
+}
+
+func (s *Storage) DeleteUrl(alias string) error {
+	stmt, err := s.db.Prepare("DELETE FROM url WHERE alias=?")
+	if err != nil {
+		return fmt.Errorf("could not prepare a query for deleting url for the alias %v, err - %w", alias, err)
+	}
+
+	_, err = stmt.Exec(alias)
+	if err != nil {
+		return fmt.Errorf("could not delete a url for the alias %v, err - %w", alias, err)
+	}
+
+	return nil
 }
